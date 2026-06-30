@@ -1,0 +1,16 @@
+# Byte-compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environments
+venv/
+.venv/
+env/
+
+# Operating system files
+.DS_Store
+Thumbs.db
+
+# Local application state/logs
+*.log
