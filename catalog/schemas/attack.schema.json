@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "AdversarialAttack",
+  "type": "object",
+  "properties": {
+    "attack_id": { "type": "string" },
+    "category": { 
+      "type": "string",
+      "enum": ["jailbreak", "prompt_injection", "prompt_leak", "pii_leak", "hallucination", "toxicity", "off_policy", "tool_abuse"]
+    },
+    "severity": { "type": "string", "enum": ["low", "medium", "high", "critical"] },
+    "prompt": { "type": "string" },
+    "evaluation_rubric": {
+      "type": "object",
+      "properties": {
+        "fail_criteria": { "type": "string" }
+      },
+      "required": ["fail_criteria"]
+    }
+  },
+  "required": ["attack_id", "category", "severity", "prompt", "evaluation_rubric"]
+}
