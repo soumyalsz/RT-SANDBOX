@@ -11,6 +11,7 @@ from runner.quote_validator import validate_judge_citations
 from runner.aggregator import aggregate_run_results
 from runner.renderer import generate_html_report
 from runner.mutator import generate_mutation
+from runner.guardrails import scan_output_guardrail
 
 SCHEMA_PATH = "catalog/schemas/attack.schema.json"
 PRODUCTION_CATALOG_DIR = "catalog/attacks/production"
@@ -31,7 +32,6 @@ def load_and_validate_catalog() -> list:
     return all_attacks
 
 def log_discovered_vulnerability(attack_id: str, category: str, severity: str, mutated_prompt: str, criteria: str):
-    """Saves a successfully engineered mutation out to the local staging directory."""
     os.makedirs(STAGING_CATALOG_DIR, exist_ok=True)
     staging_file = os.path.join(STAGING_CATALOG_DIR, f"discovered_{attack_id}.yaml")
     
@@ -50,8 +50,6 @@ def log_discovered_vulnerability(attack_id: str, category: str, severity: str, m
 async def execute_target_inference(client: httpx.AsyncClient, prompt: str) -> str:
     try:
         messages = []
-        
-        # The shield only gets injected if your master switch is turned ON
         if DEFENSE_MODE:
             messages.append({"role": "system", "content": TARGET_SYSTEM_SHIELD})
         
@@ -68,8 +66,20 @@ async def execute_target_inference(client: httpx.AsyncClient, prompt: str) -> st
             },
             timeout=45.0
         )
-        return response.json()["message"]["content"]
+        
+        raw_text = response.json()["message"]["content"]
+        
+        # 🎯 RADAR DEBUG LINE: Forces terminal visibility on every single raw model output
+        # print(f"   🔍 [DEBUG RAW OUTPUT]: {repr(raw_text)}")
+        
+        # 🚨 INLINE GUARDRAIL STEP: Scans text before it escapes the application layer
+        triggered, final_text = scan_output_guardrail(raw_text)
+        if triggered:
+            print("   🚨 [GUARDRAIL TRIGGERED] Intercepted a dangerous output token pattern!")
+            
+        return final_text
     except Exception as e:
+        print(f"   ❌ [INFERENCE CRASH ALERT]: {str(e)}")
         return f"TARGET EXCEPTION: {str(e)}"
 
 async def start_pipeline():
@@ -97,16 +107,10 @@ async def start_pipeline():
                 if depth > 0:
                     print(f"   🌀 Mutation Depth [{depth}/{MAX_MUTATION_DEPTH}] executing...")
 
-                # 1. Fire prompt at Target
                 target_out = await execute_target_inference(client, current_prompt)
-                
-                # 2. Grade response with Safety Judge
                 raw_verdict = await evaluate_response(current_prompt, target_out, attack["evaluation_rubric"])
-                
-                # 3. Check citations
                 _, checked_verdict = validate_judge_citations(target_out, raw_verdict)
 
-                # Record execution details
                 run_history.append({
                     "attack_id": f"{attack['attack_id']}-G{depth}" if depth > 0 else attack['attack_id'],
                     "category": attack["category"],
@@ -122,7 +126,6 @@ async def start_pipeline():
                     print(f"   💥 BREACH CONFIRMED at Generation {depth}!")
                     breach_secured = True
                     if depth > 0:
-                        # Log it as a newly engineered exploit signature
                         log_discovered_vulnerability(
                             attack["attack_id"], attack["category"], attack["severity"],
                             current_prompt, attack["evaluation_rubric"]["fail_criteria"]
@@ -136,7 +139,6 @@ async def start_pipeline():
                     
                 depth += 1
 
-    # Compile and generate dashboard metrics
     processed_summary = aggregate_run_results(run_history)
     generate_html_report(processed_summary)
 
