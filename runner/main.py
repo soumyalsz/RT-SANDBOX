@@ -87,7 +87,7 @@ async def execute_target_inference(client: httpx.AsyncClient, prompt: str) -> st
 
 async def start_pipeline():
     await emit_status("\n" + "="*50)
-    await emit_status("  RT-SANDBOX v1.0 - Starting test suite...")
+    await emit_status("  Hado 90 v1.0.0 v1.0 - Starting test suite...")
     await emit_status("="*50 + "\n")
     
     try:

@@ -92,7 +92,7 @@ def generate_html_report(report_data: dict, output_path: str | None = None):
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>RT-SANDBOX // Security Audit</title>
+        <title>Hado 90 v1.0.0 // Security Audit</title>
         <script>
             document.addEventListener('DOMContentLoaded', () => {{
                 const params = new URLSearchParams(window.location.search);
@@ -289,7 +289,7 @@ def generate_html_report(report_data: dict, output_path: str | None = None):
         <div class="page">
             <header class="header">
                 <div class="brand">
-                    <h1>RT-SANDBOX</h1>
+                    <h1>Hado 90 v1.0.0</h1>
                     <p>security audit</p>
                 </div>
                 <div class="status-pill">status: ready</div>

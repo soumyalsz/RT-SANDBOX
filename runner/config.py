@@ -49,7 +49,7 @@ def resolve_runtime_models() -> tuple[str, str]:
     """
     Auto-selects target and judge models based on available GPU VRAM.
     
-    This function helps users run RT-SANDBOX without manual configuration.
+    This function helps users run Hado 90 v1.0.0 without manual configuration.
     It balances model capability against hardware constraints:
     
     - 11+ GB VRAM: Uses larger models for better attack coverage

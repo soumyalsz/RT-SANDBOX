@@ -10,7 +10,7 @@ from runner.logger import ws_logger
 BASE_DIR = Path(__file__).resolve().parent.parent
 REPORTS_DIR = BASE_DIR / "reports"
 
-app = FastAPI(title="RT-SANDBOX Web Endpoint Gateway")
+app = FastAPI(title="Hado 90 v1.0.0 Web Endpoint Gateway")
 
 # Ensure your report workspace paths exist cleanly on disk layout
 REPORTS_DIR.mkdir(parents=True, exist_ok=True)
