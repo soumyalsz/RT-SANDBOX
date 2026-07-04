@@ -82,7 +82,7 @@
                             <h3 class="text-[11px] uppercase tracking-[0.3em] text-zinc-500">analytics</h3>
                         </div>
                         <div class="relative h-[260px] overflow-hidden rounded-xl border border-zinc-800 bg-zinc-950/80">
-                            <iframe id="analyticsFrame" srcdoc="" class="hidden h-full w-full border-0"></iframe>
+                            <iframe id="analyticsFrame" class="hidden h-full w-full border-0"></iframe>
                             <div id="analyticsPlaceholder" class="absolute inset-0 flex flex-col items-center justify-center px-6 text-center text-zinc-500">
                                 <p class="text-sm text-zinc-300">No analytics summary available.</p>
                                 <p class="mt-2 text-xs uppercase tracking-[0.24em] text-zinc-600">Run the suite to populate this panel.</p>
@@ -94,7 +94,7 @@
                             <h3 class="text-[11px] uppercase tracking-[0.3em] text-zinc-500">test cases</h3>
                         </div>
                         <div class="relative h-[260px] overflow-hidden rounded-xl border border-zinc-800 bg-zinc-950/80">
-                            <iframe id="testCasesFrame" srcdoc="" class="hidden h-full w-full border-0"></iframe>
+                            <iframe id="testCasesFrame" class="hidden h-full w-full border-0"></iframe>
                             <div id="testCasesPlaceholder" class="absolute inset-0 flex flex-col items-center justify-center px-6 text-center text-zinc-500">
                                 <p class="text-sm text-zinc-300">No test cases available.</p>
                                 <p class="mt-2 text-xs uppercase tracking-[0.24em] text-zinc-600">Detailed findings will appear here.</p>
@@ -197,26 +197,19 @@
             const analyticsPlaceholder = document.getElementById('analyticsPlaceholder');
             const testCasesPlaceholder = document.getElementById('testCasesPlaceholder');
             const runBtn = document.getElementById('runBtn');
+            const timestamp = new Date().getTime();
 
-            try {
-                const reportResponse = await fetch(`/reports/dashboard.html?t=${new Date().getTime()}`);
-                const reportHtml = await reportResponse.text();
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(reportHtml, 'text/html');
-                const styles = Array.from(doc.querySelectorAll('style')).map(style => style.textContent).join('\n');
-                const analyticsSection = doc.getElementById('analytics')?.outerHTML || '<div style="color:#f5f5f5;padding:12px;font-family:Inter,sans-serif;background:#050505;">No analytics content available.</div>';
-                const testCasesSection = doc.getElementById('test-cases')?.outerHTML || '<div style="color:#f5f5f5;padding:12px;font-family:Inter,sans-serif;background:#050505;">No test case content available.</div>';
+            analyticsFrame.src = `/reports/dashboard.html?view=analytics&t=${timestamp}`;
+            testCasesFrame.src = `/reports/dashboard.html?view=test-cases&t=${timestamp}`;
 
-                analyticsFrame.srcdoc = `<style>${styles}</style>${analyticsSection}`;
-                testCasesFrame.srcdoc = `<style>${styles}</style>${testCasesSection}`;
+            analyticsFrame.onload = () => {
                 analyticsFrame.classList.remove('hidden');
-                testCasesFrame.classList.remove('hidden');
                 analyticsPlaceholder.classList.add('hidden');
+            };
+            testCasesFrame.onload = () => {
+                testCasesFrame.classList.remove('hidden');
                 testCasesPlaceholder.classList.add('hidden');
-            } catch (err) {
-                analyticsFrame.srcdoc = `<div style="color:#f5f5f5;padding:12px;font-family:Inter,sans-serif;background:#050505;">Unable to load report content.</div>`;
-                testCasesFrame.srcdoc = `<div style="color:#f5f5f5;padding:12px;font-family:Inter,sans-serif;background:#050505;">Unable to load report content.</div>`;
-            }
+            };
 
             runBtn.disabled = false;
             runBtn.classList.remove('opacity-50', 'cursor-not-allowed');

@@ -93,6 +93,20 @@ def generate_html_report(report_data: dict, output_path: str | None = None):
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>RT-SANDBOX // Security Audit</title>
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {{
+                const params = new URLSearchParams(window.location.search);
+                const view = params.get('view');
+                if (view === 'analytics') {{
+                    document.getElementById('test-cases')?.remove();
+                }} else if (view === 'test-cases') {{
+                    document.querySelector('header')?.remove();
+                    document.getElementById('analytics')?.remove();
+                    document.querySelector('.section-title')?.remove();
+                    document.querySelector('.card')?.remove();
+                }}
+            }});
+        </script>
         <style>
             :root {{ color-scheme: dark; }}
             * {{ margin: 0; padding: 0; box-sizing: border-box; }}
