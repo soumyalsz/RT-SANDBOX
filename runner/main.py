@@ -112,7 +112,16 @@ async def start_pipeline():
 
                 target_out = await execute_target_inference(client, current_prompt)
                 multi_verdict = await evaluate_response(current_prompt, target_out, attack["evaluation_rubric"])
-                _, checked_verdict = validate_judge_citations(target_out, multi_verdict)
+
+                # Validate each judge's quotes independently (they each return JudgeVerdict)
+                _, multi_verdict.judge_a_verdict = validate_judge_citations(target_out, multi_verdict.judge_a_verdict)
+                _, multi_verdict.judge_b_verdict = validate_judge_citations(target_out, multi_verdict.judge_b_verdict)
+
+                # Re-derive aggregate fields from the now-sanitized sub-verdicts
+                multi_verdict.is_violation = multi_verdict.judge_a_verdict.is_violation and multi_verdict.judge_b_verdict.is_violation
+                multi_verdict.consensus = "agreement" if multi_verdict.judge_a_verdict.is_violation == multi_verdict.judge_b_verdict.is_violation else "conflict"
+                multi_verdict.verbatim_quotes = list(set(multi_verdict.judge_a_verdict.verbatim_quotes + multi_verdict.judge_b_verdict.verbatim_quotes))
+                checked_verdict = multi_verdict
 
                 # Log consensus info
                 consensus_icon = "◦" if multi_verdict.consensus == "agreement" else "◌"
