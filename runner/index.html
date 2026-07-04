@@ -28,6 +28,10 @@
         body {
             background: #000000;
         }
+
+        .status-dot, .status-dot-ping {
+            transition: background-color 0.8s ease;
+        }
     </style>
 </head>
 
@@ -43,10 +47,16 @@
                         <p class="text-[11px] uppercase tracking-[0.32em] text-zinc-500">security workspace</p>
                     </div>
                 </div>
-                <div
-                    class="flex items-center gap-2 self-start rounded-full border border-zinc-800 bg-black/70 px-3 py-1.5 text-[11px] uppercase tracking-[0.24em] text-zinc-400 sm:self-auto">
-                    <span class="text-zinc-300">status</span>
-                    <span class="text-white">ready</span>
+                <div class="flex items-center gap-3 self-start sm:self-auto">
+                    <div
+                        class="flex items-center gap-2 rounded-full border border-zinc-800 bg-black/70 px-3 py-1.5 text-[11px] uppercase tracking-[0.24em] text-zinc-400">
+                        <span class="text-zinc-300">status</span>
+                        <span class="text-white">ready</span>
+                    </div>
+                    <div class="relative flex h-3 w-3 items-center justify-center">
+                        <span id="statusDotPing" class="status-dot-ping absolute inline-flex h-full w-full animate-ping rounded-full opacity-40" style="background-color: #ef4444;"></span>
+                        <span id="statusDot" class="status-dot relative inline-flex h-2.5 w-2.5 rounded-full" style="background-color: #ef4444;"></span>
+                    </div>
                 </div>
             </div>
         </header>
@@ -92,7 +102,7 @@
                 </div>
             </section>
 
-            <section class="rounded-2xl border border-zinc-800 bg-zinc-950 p-5">
+            <section class="flex flex-col rounded-2xl border border-zinc-800 bg-zinc-950 p-5">
                 <div class="mb-4 flex items-center justify-between border-b border-zinc-800 pb-2">
                     <h2 class="text-[11px] uppercase tracking-[0.3em] text-zinc-500">workspace view</h2>
                     <button onclick="reloadReportPanel()"
@@ -100,13 +110,13 @@
                         refresh
                     </button>
                 </div>
-                <div class="grid gap-4 xl:grid-cols-2">
-                    <div class="rounded-2xl border border-zinc-800 bg-black/70 p-3">
+                <div class="grid flex-1 gap-4 xl:grid-cols-2">
+                    <div class="flex flex-col rounded-2xl border border-zinc-800 bg-black/70 p-3">
                         <div class="mb-3 border-b border-zinc-800 pb-2">
                             <h3 class="text-[11px] uppercase tracking-[0.3em] text-zinc-500">analytics</h3>
                         </div>
                         <div
-                            class="relative h-[260px] overflow-hidden rounded-xl border border-zinc-800 bg-zinc-950/80">
+                            class="relative min-h-[260px] flex-1 overflow-hidden rounded-xl border border-zinc-800 bg-zinc-950/80">
                             <iframe id="analyticsFrame" class="hidden h-full w-full border-0"></iframe>
                             <div id="analyticsPlaceholder"
                                 class="absolute inset-0 flex flex-col items-center justify-center px-6 text-center text-zinc-500">
@@ -116,12 +126,12 @@
                             </div>
                         </div>
                     </div>
-                    <div class="rounded-2xl border border-zinc-800 bg-black/70 p-3">
+                    <div class="flex flex-col rounded-2xl border border-zinc-800 bg-black/70 p-3">
                         <div class="mb-3 border-b border-zinc-800 pb-2">
                             <h3 class="text-[11px] uppercase tracking-[0.3em] text-zinc-500">test cases</h3>
                         </div>
                         <div
-                            class="relative h-[260px] overflow-hidden rounded-xl border border-zinc-800 bg-zinc-950/80">
+                            class="relative min-h-[260px] flex-1 overflow-hidden rounded-xl border border-zinc-800 bg-zinc-950/80">
                             <iframe id="testCasesFrame" class="hidden h-full w-full border-0"></iframe>
                             <div id="testCasesPlaceholder"
                                 class="absolute inset-0 flex flex-col items-center justify-center px-6 text-center text-zinc-500">
@@ -182,9 +192,20 @@
             terminal.scrollTop = terminal.scrollHeight;
         }
 
+        function setStatusDot(color) {
+            const dot = document.getElementById('statusDot');
+            const ping = document.getElementById('statusDotPing');
+            if (dot) dot.style.backgroundColor = color;
+            if (ping) ping.style.backgroundColor = color;
+        }
+
         function connectLogsWebSocket() {
             const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
             ws = new WebSocket(`${protocol}//${window.location.host}/ws/logs`);
+
+            ws.onopen = function () {
+                setStatusDot('#22c55e');
+            };
 
             ws.onmessage = function (event) {
                 appendTerminalEntry(event.data);
@@ -195,6 +216,7 @@
             };
 
             ws.onclose = function () {
+                setStatusDot('#ef4444');
                 setTimeout(connectLogsWebSocket, 2000);
             };
         }
