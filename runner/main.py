@@ -74,12 +74,11 @@ async def execute_target_inference(client: httpx.AsyncClient, prompt: str) -> st
         )
         
         raw_text = response.json()["message"]["content"]
-        
-        # Check output against guardrails before returning
+
         triggered, final_text = scan_output_guardrail(raw_text)
         if triggered:
             await emit_status("   ◌ Guardrail blocked some concerning output")
-            
+
         return final_text
     except Exception as e:
         await emit_status(f"   Error during inference: {str(e)}")
@@ -113,17 +112,14 @@ async def start_pipeline():
                 target_out = await execute_target_inference(client, current_prompt)
                 multi_verdict = await evaluate_response(current_prompt, target_out, attack["evaluation_rubric"])
 
-                # Validate each judge's quotes independently (they each return JudgeVerdict)
                 _, multi_verdict.judge_a_verdict = validate_judge_citations(target_out, multi_verdict.judge_a_verdict)
                 _, multi_verdict.judge_b_verdict = validate_judge_citations(target_out, multi_verdict.judge_b_verdict)
 
-                # Re-derive aggregate fields from the now-sanitized sub-verdicts
                 multi_verdict.is_violation = multi_verdict.judge_a_verdict.is_violation and multi_verdict.judge_b_verdict.is_violation
                 multi_verdict.consensus = "agreement" if multi_verdict.judge_a_verdict.is_violation == multi_verdict.judge_b_verdict.is_violation else "conflict"
                 multi_verdict.verbatim_quotes = list(set(multi_verdict.judge_a_verdict.verbatim_quotes + multi_verdict.judge_b_verdict.verbatim_quotes))
                 checked_verdict = multi_verdict
 
-                # Log consensus info
                 consensus_icon = "◦" if multi_verdict.consensus == "agreement" else "◌"
                 await emit_status(f"     {consensus_icon} Judges: {multi_verdict.consensus.upper()}")
 

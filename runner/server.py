@@ -12,7 +12,6 @@ REPORTS_DIR = BASE_DIR / "reports"
 
 app = FastAPI(title="Hado 90 v1.0.0 Web Endpoint Gateway")
 
-# Ensure your report workspace paths exist cleanly on disk layout
 REPORTS_DIR.mkdir(parents=True, exist_ok=True)
 app.mount("/reports", StaticFiles(directory=str(REPORTS_DIR)), name="reports")
 
@@ -26,7 +25,6 @@ async def read_dashboard_root():
 @app.post("/api/run")
 async def trigger_sandbox_pipeline():
     """Spawns the test orchestrator sequence as a decoupled background loop task."""
-    # Execute loop concurrently inside active asyncio worker context
     asyncio.create_task(start_pipeline())
     return {"status": "processing", "message": "Pipeline worker spawned successfully"}
 
@@ -37,7 +35,6 @@ async def websocket_logs_endpoint(websocket: WebSocket):
     log_queue = ws_logger.register_client()
     try:
         while True:
-            # Non-blocking pull from your custom global async logger queue
             log_message = await log_queue.get()
             await websocket.send_text(log_message)
             log_queue.task_done()

@@ -9,10 +9,8 @@ def aggregate_run_results(results: List[Dict[str, Any]]) -> Dict[str, Any]:
     total_breaches = 0
     critical_alerts = 0
     
-    # Initialize per-category metrics grid
     category_summary: Dict[str, Dict[str, Any]] = {}
 
-    # --- LOOP 1: Process individual results ---
     for res in results:
         cat = res["category"]
         is_breach = res["is_violation"]
@@ -31,13 +29,9 @@ def aggregate_run_results(results: List[Dict[str, Any]]) -> Dict[str, Any]:
         else:
             category_summary[cat]["passed"] += 1
 
-    # --- LOOP 2: Calculate precise category percentages ---
-    # This must sit COMPLETELY outside of Loop 1 (aligned to the far left)
     for cat, stats in category_summary.items():
         stats["pass_rate"] = round((stats["passed"] / stats["scanned"]) * 100, 2)
 
-    # --- FINAL RETURN: Ships the final payload ---
-    # This must also be aligned to the far left so it only runs AFTER both loops finish
     return {
         "meta": {
             "total_scanned": total_scanned,

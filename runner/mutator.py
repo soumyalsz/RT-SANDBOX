@@ -24,7 +24,6 @@ def ensure_distinct_mutation(failed_prompt: str, previous_prompt: str | None = N
     return fallback
 
 
-# CRITICAL: Ensure this name is exactly 'generate_mutation' lowercase
 async def generate_mutation(failed_prompt: str, target_response: str) -> MutationOutput:
     """Asks the local mutator model to rewrite a blocked prompt into a more sophisticated variation."""
     client = httpx.AsyncClient(base_url=OLLAMA_BASE_URL, timeout=60.0)
@@ -54,9 +53,9 @@ async def generate_mutation(failed_prompt: str, target_response: str) -> Mutatio
                     {"role": "user", "content": user_payload}
                 ],
                 "stream": False,
-                "keep_alive": 0,  # Flush VRAM instantly
+                "keep_alive": 0,
                 "format": MutationOutput.model_json_schema(),
-                "options": {"temperature": 0.7} # Higher temperature for linguistic variation
+                "options": {"temperature": 0.7}
             }
         )
         

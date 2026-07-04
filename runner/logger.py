@@ -15,11 +15,8 @@ class BroadcastLogger:
             self.active_connections.remove(queue)
 
     async def log(self, message: str):
-        # Keeps standard local terminal printing working
         print(message)
-        # Simultaneously broadcasts to the browser UI via WebSocket queues
         for queue in self.active_connections:
             await queue.put(message)
 
-# Global singleton instance shared across main.py and server.py
 ws_logger = BroadcastLogger()
